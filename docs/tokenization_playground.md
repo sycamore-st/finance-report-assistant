@@ -9,19 +9,32 @@ Use this page to track experiments tied to real SEC chunk data.
 - `playground/tokenization/compare_tokenizers.py`
 - `playground/tokenization/oov_analysis.py`
 - `playground/tokenization/chunk_length_impact.py`
+- `playground/tokenization/compare_all_tokenizers.py`
 
 ## Quick Commands
 ```bash
 source .venv/bin/activate
 
-python playground/tokenization/compare_tokenizers.py
+python playground/tokenization/compare_tokenizers.py \
+  --train-ratio 0.8 --min-freq 2 \
+  --output-md docs/tokenizer_matrix.md
 
 python playground/tokenization/oov_analysis.py \
   --train-ratio 0.8 --min-freq 2
 
 python playground/tokenization/chunk_length_impact.py \
   --budget 220
+
+
 ```
+
+## Matrix Columns
+- `Tokenizer`
+- `OOV`
+- `Avg Seq Len`
+- `Vocab Size`
+- `Strength`
+- `Weakness`
 
 ## Experiment Template
 

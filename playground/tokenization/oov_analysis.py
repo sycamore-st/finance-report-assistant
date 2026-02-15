@@ -2,54 +2,10 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 from collections import Counter
 from pathlib import Path
 
-TOKEN_RE = re.compile(r"[A-Za-z]+(?:'[A-Za-z]+)?|\d+(?:\.\d+)?|[^\w\s]")
-DEFAULT_CHUNKS = Path("data/processed/chunks/AAPL/10-K/0000320193-25-000079/chunks.jsonl")
-REPO_ROOT = Path(__file__).resolve().parents[2]
-
-
-def resolve_chunks_path(chunks_path: Path) -> Path:
-    if chunks_path.is_absolute():
-        return chunks_path
-    cwd_candidate = (Path.cwd() / chunks_path).resolve()
-    if cwd_candidate.exists():
-        return cwd_candidate
-    return (REPO_ROOT / chunks_path).resolve()
-
-
-def load_chunk_texts(chunks_path: Path) -> list[str]:
-    texts: list[str] = []
-    for line in chunks_path.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        payload = json.loads(line)
-        texts.append(payload["text"])
-    return texts
-
-
-def whitespace_tokenize(text: str) -> list[str]:
-    return [t for t in text.split() if t]
-
-
-def regex_tokenize(text: str) -> list[str]:
-    return TOKEN_RE.findall(text)
-
-
-def simple_subword_tokenize(text: str, split_len: int = 6) -> list[str]:
-    out: list[str] = []
-    for tok in regex_tokenize(text):
-        if tok.isalnum() and len(tok) > split_len:
-            out.append(tok[:split_len])
-            rest = tok[split_len:]
-            while rest:
-                out.append(f"##{rest[:split_len]}")
-                rest = rest[split_len:]
-        else:
-            out.append(tok)
-    return out
+from common import DEFAULT_CHUNKS, get_extended_tokenizers, load_chunk_texts, resolve_chunks_path
 
 
 def oov_ratio(train_tokens: list[str], test_tokens: list[str], min_freq: int) -> tuple[float, int, int]:
@@ -81,12 +37,7 @@ def main() -> None:
     train_texts = texts[:split_idx]
     test_texts = texts[split_idx:]
 
-    tokenizers = {
-        "whitespace": whitespace_tokenize,
-        "regex": regex_tokenize,
-        "simple_subword": simple_subword_tokenize,
-    }
-
+    tokenizers = get_extended_tokenizers()
     result = {
         "chunks": str(chunks_path),
         "train_chunks": len(train_texts),
