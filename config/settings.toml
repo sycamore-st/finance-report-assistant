@@ -1,0 +1,13 @@
+[app]
+name = "finance-report-assistant"
+stage = "local"
+
+[ingestion]
+default_forms = ["10-K", "10-Q", "8-K"]
+max_mvp_tickers = 5
+
+[data]
+base_dir = "data"
+raw_dir = "data/raw"
+processed_dir = "data/processed"
+index_dir = "data/index"

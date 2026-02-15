@@ -1,0 +1,9 @@
+{
+  "ticker": "AAPL",
+  "form": "10-K",
+  "accession_number": "0000320193-25-000079",
+  "files": [
+    "filing_metadata.json",
+    "primary_document.html"
+  ]
+}

@@ -1,0 +1,2 @@
+[console_scripts]
+fra = finance_report_assistant.cli:app
