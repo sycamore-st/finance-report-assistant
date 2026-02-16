@@ -16,6 +16,16 @@ Files:
 - `chunks.jsonl`: cleaned + chunked text with citation metadata
 - `chunk_stats.json`: chunking configuration and counts
 
+## Retrieval Index Layout
+
+`data/index/retrieval/{ticker}/{form}/`
+
+Files:
+- `manifest.json`: index metadata and source chunk file list
+- `records.jsonl`: retrieval corpus records (copied from chunk records)
+- `bm25.pkl`: serialized BM25 index
+- `embedding.pkl`: serialized dense hash embedding index
+
 ## Filing Metadata Fields
 - `ticker` (str)
 - `cik` (str, 10-digit zero-padded)
@@ -44,3 +54,16 @@ Files:
 - `text` (str)
 - `source_file` (str)
 - `citation_url` (str)
+
+## Retrieval Hit Fields (`fra search` output)
+- `rank` (int)
+- `score` (float, fused rank score)
+- `bm25_score` (float)
+- `embedding_score` (float)
+- `chunk_id` (str)
+- `ticker` (str)
+- `form` (str)
+- `accession_number` (str)
+- `section_title` (str)
+- `citation_url` (str)
+- `text` (str)

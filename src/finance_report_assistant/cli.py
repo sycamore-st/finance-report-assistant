@@ -12,6 +12,11 @@ from src.finance_report_assistant.processing.tokenizer_eval import (
     evaluate_tokenizer_metrics,
     load_chunk_texts,
 )
+from src.finance_report_assistant.retrieval.index import (
+    build_retrieval_index,
+    default_index_dir,
+    load_retrieval_index,
+)
 
 app = typer.Typer(help="Finance Report Assistant CLI")
 
@@ -78,6 +83,69 @@ def eval_tokenizer(
 
     typer.echo(json.dumps(metrics, indent=2))
     typer.echo(f"Appended report to {output_md}")
+
+
+@app.command("build-retrieval-index")
+def build_retrieval(
+    ticker: str = typer.Option(..., help="Ticker symbol, e.g., AAPL"),
+    form: str = typer.Option("10-K", help="SEC form type"),
+    limit: int = typer.Option(1, min=1, max=20, help="How many filings to include"),
+    embedding_dim: int = typer.Option(384, min=64, max=2048, help="Dense hashing vector size"),
+) -> None:
+    """Build local retrieval index (BM25 + dense hash embeddings)."""
+    out_dir, manifest = build_retrieval_index(
+        ticker=ticker,
+        form=form,
+        limit=limit,
+        embedding_dim=embedding_dim,
+    )
+    typer.echo(f"Built retrieval index: {out_dir}")
+    typer.echo(json.dumps(manifest, indent=2))
+
+
+@app.command("search")
+def search(
+    query: str = typer.Option(..., help="Natural-language question/query"),
+    ticker: str = typer.Option(..., help="Ticker symbol, e.g., AAPL"),
+    form: str = typer.Option("10-K", help="SEC form type"),
+    top_k: int = typer.Option(5, min=1, max=20),
+    bm25_weight: float = typer.Option(0.55, min=0.0, max=1.0),
+    embedding_weight: float = typer.Option(0.45, min=0.0, max=1.0),
+) -> None:
+    """Run hybrid retrieval against local index and print citation-ready hits."""
+    index_dir = default_index_dir(ticker=ticker, form=form)
+    if not index_dir.exists():
+        typer.echo(
+            f"Index does not exist at {index_dir}. Run build-retrieval-index first."
+        )
+        raise typer.Exit(code=1)
+
+    index = load_retrieval_index(index_dir)
+    hits = index.search(
+        query=query,
+        top_k=top_k,
+        bm25_weight=bm25_weight,
+        embedding_weight=embedding_weight,
+    )
+    if not hits:
+        typer.echo("No retrieval hits found.")
+        raise typer.Exit(code=1)
+
+    for hit in hits:
+        row = {
+            "rank": hit.rank,
+            "score": round(hit.score, 6),
+            "bm25_score": round(hit.bm25_score, 6),
+            "embedding_score": round(hit.embedding_score, 6),
+            "chunk_id": hit.record.get("chunk_id"),
+            "ticker": hit.record.get("ticker"),
+            "form": hit.record.get("form"),
+            "accession_number": hit.record.get("accession_number"),
+            "section_title": hit.record.get("section_title"),
+            "citation_url": hit.record.get("citation_url"),
+            "text": hit.record.get("text"),
+        }
+        typer.echo(json.dumps(row, ensure_ascii=False))
 
 
 if __name__ == "__main__":

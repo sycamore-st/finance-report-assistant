@@ -14,3 +14,16 @@ def test_ingest_command_handles_no_results(monkeypatch) -> None:
 
     assert result.exit_code == 1
     assert "No 10-K filings found" in result.stdout
+
+
+def test_search_command_requires_index(tmp_path, monkeypatch) -> None:
+    from finance_report_assistant.core.config import settings
+
+    monkeypatch.setattr(settings, "data_dir", tmp_path / "data")
+    result = runner.invoke(
+        app,
+        ["search", "--query", "supply chain", "--ticker", "AAPL", "--form", "10-K"],
+    )
+
+    assert result.exit_code == 1
+    assert "build-retrieval-index first" in result.stdout

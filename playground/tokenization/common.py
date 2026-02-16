@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import json
 import re
+import sys
 import unicodedata
 from pathlib import Path
 from typing import Callable
@@ -11,26 +11,27 @@ PUNCT_RE = re.compile(r"\w+|[^\w\s]")
 DEFAULT_CHUNKS = Path("data/processed/chunks/AAPL/10-K/0000320193-25-000079/chunks.jsonl")
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
+try:
+    from finance_report_assistant.utils.chunks import (
+        load_chunk_texts as _shared_load_chunk_texts,
+        resolve_repo_path as _shared_resolve_repo_path,
+    )
+except ModuleNotFoundError:
+    sys.path.insert(0, str(REPO_ROOT / "src"))
+    from finance_report_assistant.utils.chunks import (
+        load_chunk_texts as _shared_load_chunk_texts,
+        resolve_repo_path as _shared_resolve_repo_path,
+    )
+
 Tokenizer = Callable[[str], list[str]]
 
 
 def resolve_chunks_path(chunks_path: Path) -> Path:
-    if chunks_path.is_absolute():
-        return chunks_path
-    cwd_candidate = (Path.cwd() / chunks_path).resolve()
-    if cwd_candidate.exists():
-        return cwd_candidate
-    return (REPO_ROOT / chunks_path).resolve()
+    return _shared_resolve_repo_path(chunks_path)
 
 
 def load_chunk_texts(chunks_path: Path) -> list[str]:
-    texts: list[str] = []
-    for line in chunks_path.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        payload = json.loads(line)
-        texts.append(payload["text"])
-    return texts
+    return _shared_load_chunk_texts(chunks_path)
 
 
 def whitespace_tokenize(text: str) -> list[str]:

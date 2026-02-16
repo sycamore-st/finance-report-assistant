@@ -36,13 +36,31 @@ Outputs:
 - Raw: `data/raw/sec-edgar/<ticker>/10-K/<accession>/`
 - Processed chunks: `data/processed/chunks/<ticker>/<form>/<accession>/chunks.jsonl`
 
+Build retrieval index (BM25 + dense hash embeddings):
+
+```bash
+fra build-retrieval-index --ticker AAPL --form 10-K --limit 1
+```
+
+Run hybrid retrieval query:
+
+```bash
+fra search --ticker AAPL --form 10-K --query "What supply chain risks are disclosed?" --top-k 5
+```
+
+Index artifacts:
+- `data/index/retrieval/<ticker>/<form>/manifest.json`
+- `data/index/retrieval/<ticker>/<form>/records.jsonl`
+- `data/index/retrieval/<ticker>/<form>/bm25.pkl`
+- `data/index/retrieval/<ticker>/<form>/embedding.pkl`
+
 ## Roadmap status
 
 - [x] Repo skeleton
 - [x] Initial EDGAR ingestion (`10-K`, one ticker)
 - [x] Cleaning + chunking + metadata schema
 - [x] Tokenizer/OOV evaluation script
-- [ ] Retrieval baseline (BM25 + embeddings)
+- [x] Retrieval baseline (BM25 + embeddings)
 - [ ] Grounded Q&A with citations
 - [ ] Theme classification
 - [ ] Summarization

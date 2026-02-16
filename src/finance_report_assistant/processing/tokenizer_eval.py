@@ -1,19 +1,15 @@
 from __future__ import annotations
 
-import json
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
+from finance_report_assistant.utils.chunks import load_chunk_texts as _load_chunk_texts
+
 
 def load_chunk_texts(chunks_path: Path) -> list[str]:
-    texts: list[str] = []
-    for line in chunks_path.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        row = json.loads(line)
-        texts.append(row["text"])
-    return texts
+    # Keep local API stable while delegating to shared chunk utility.
+    return _load_chunk_texts(chunks_path)
 
 
 def whitespace_tokenize(text: str) -> list[str]:

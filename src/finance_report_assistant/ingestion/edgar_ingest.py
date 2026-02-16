@@ -3,9 +3,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from finance_report_assistant.core.models import FilingMetadata
-from finance_report_assistant.ingestion.sec_client import SEC_ARCHIVES_BASE, SecEdgarClient
-from finance_report_assistant.utils.paths import raw_filing_dir
+from src.finance_report_assistant.core.models import FilingMetadata
+from src.finance_report_assistant.ingestion.sec_client import SEC_ARCHIVES_BASE, SecEdgarClient
+from src.finance_report_assistant.utils.paths import raw_filing_dir
 
 # Small starter mapping for MVP. Expand as needed.
 TICKER_TO_CIK = {
