@@ -5,7 +5,7 @@ from typing import Any
 import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from src.finance_report_assistant.core.config import settings
+from finance_report_assistant.core.config import settings
 
 SEC_DATA_SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik}.json"
 SEC_ARCHIVES_BASE = "https://www.sec.gov/Archives/edgar/data"

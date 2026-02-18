@@ -11,7 +11,7 @@ pip install -e '.[dev]'
 cp .env.example .env
 ```
 
-## Current MVP commands
+## Core commands
 
 Ingest one ticker and one filing type (`10-K`):
 
@@ -25,34 +25,37 @@ Build cleaned/chunked outputs:
 fra build-chunks --ticker AAPL --form 10-K --limit 1
 ```
 
-Run tokenizer/OOV evaluation for chunks:
-
-```bash
-fra eval-tokenizer \
-  --chunks data/processed/chunks/AAPL/10-K/0000320193-25-000079/chunks.jsonl
-```
-
-Outputs:
-- Raw: `data/raw/sec-edgar/<ticker>/10-K/<accession>/`
-- Processed chunks: `data/processed/chunks/<ticker>/<form>/<accession>/chunks.jsonl`
-
-Build retrieval index (BM25 + dense hash embeddings):
+Build retrieval index:
 
 ```bash
 fra build-retrieval-index --ticker AAPL --form 10-K --limit 1
 ```
 
-Run hybrid retrieval query:
+Ask grounded question with citations/themes/summary:
 
 ```bash
-fra search --ticker AAPL --form 10-K --query "What supply chain risks are disclosed?" --top-k 5
+fra ask --ticker AAPL --form 10-K --question "What supply chain risks are disclosed?" --top-k 5
 ```
 
-Index artifacts:
-- `data/index/retrieval/<ticker>/<form>/manifest.json`
-- `data/index/retrieval/<ticker>/<form>/records.jsonl`
-- `data/index/retrieval/<ticker>/<form>/bm25.pkl`
-- `data/index/retrieval/<ticker>/<form>/embedding.pkl`
+
+Evaluate retrieval quality and write summary + error analysis docs:
+
+```bash
+fra eval-retrieval --ticker AAPL --form 10-K --top-k 5 --max-queries 30
+```
+
+## Unified MVP demo flow
+
+Single command to ingest filings, build chunks/index, and return answer + citations:
+
+```bash
+fra demo --ticker AAPL --question "What supply chain risks are disclosed?" --limit 1
+```
+
+## Output locations
+- Raw: `data/raw/sec-edgar/<ticker>/10-K/<accession>/`
+- Processed chunks: `data/processed/chunks/<ticker>/<form>/<accession>/chunks.jsonl`
+- Retrieval index: `data/index/retrieval/<ticker>/<form>/`
 
 ## Roadmap status
 
@@ -61,7 +64,7 @@ Index artifacts:
 - [x] Cleaning + chunking + metadata schema
 - [x] Tokenizer/OOV evaluation script
 - [x] Retrieval baseline (BM25 + embeddings)
-- [ ] Grounded Q&A with citations
-- [ ] Theme classification
-- [ ] Summarization
-- [ ] Evaluation suite expansion
+- [x] Grounded Q&A with citations (extractive MVP)
+- [x] Theme classification (keyword baseline)
+- [x] Summarization (extractive baseline)
+- [ ] Evaluation suite expansion / error analysis depth

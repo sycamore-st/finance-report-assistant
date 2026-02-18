@@ -5,11 +5,11 @@ import pickle
 from dataclasses import dataclass
 from pathlib import Path
 
-from src.finance_report_assistant.core.config import settings
-from src.finance_report_assistant.retrieval.bm25 import BM25Index
-from src.finance_report_assistant.retrieval.corpus import discover_chunk_files, load_chunk_records
-from src.finance_report_assistant.retrieval.embedding import HashEmbeddingIndex
-from src.finance_report_assistant.retrieval.hybrid import RetrievalHit, fuse_rankings
+from finance_report_assistant.core.config import settings
+from finance_report_assistant.retrieval.bm25 import BM25Index
+from finance_report_assistant.retrieval.corpus import discover_chunk_files, load_chunk_records
+from finance_report_assistant.retrieval.embedding import HashEmbeddingIndex
+from finance_report_assistant.retrieval.hybrid import RetrievalHit, fuse_rankings
 
 
 @dataclass

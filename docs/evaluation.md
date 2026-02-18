@@ -36,3 +36,37 @@
 - Max tokens/chunk: 220
 - Unique tokens: 4944
 - Rare-token ratio (freq <= 2): 0.0725
+
+## Retrieval Eval - 2026-02-18 11:28:21
+- Ticker/Form: `AAPL 10-K`
+- Queries: 30
+- Top-K: 5
+
+| Retriever | Hit@K | MRR |
+| --- | ---: | ---: |
+| bm25 | 0.8333 | 0.6289 |
+| embedding | 0.5000 | 0.3361 |
+| hybrid_rrf | 0.7667 | 0.5039 |
+
+### Hybrid Weight Sweep Best
+- bm25_weight: 1.0
+- embedding_weight: 0.0
+- hit@k: 0.8333
+- mrr: 0.6289
+
+## Retrieval Eval - 2026-02-18 11:29:42
+- Ticker/Form: `AAPL 10-K`
+- Queries: 30
+- Top-K: 5
+
+| Retriever | Hit@K | MRR |
+| --- | ---: | ---: |
+| bm25 | 0.8333 | 0.6289 |
+| embedding | 0.5000 | 0.3361 |
+| hybrid_rrf | 0.7667 | 0.5039 |
+
+### Hybrid Weight Sweep Best
+- bm25_weight: 1.0
+- embedding_weight: 0.0
+- hit@k: 0.8333
+- mrr: 0.6289

@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 
-from src.finance_report_assistant.processing.html_cleaner import SectionText
+from finance_report_assistant.processing.html_cleaner import SectionText
 
 
 @dataclass

@@ -3,10 +3,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from src.finance_report_assistant.core.config import settings
-from src.finance_report_assistant.core.models import FilingChunk
-from src.finance_report_assistant.processing.chunker import build_chunk_candidates, deterministic_chunk_id
-from src.finance_report_assistant.processing.html_cleaner import extract_sections_from_html
+from finance_report_assistant.core.config import settings
+from finance_report_assistant.core.models import FilingChunk
+from finance_report_assistant.processing.chunker import build_chunk_candidates, deterministic_chunk_id
+from finance_report_assistant.processing.html_cleaner import extract_sections_from_html
 
 
 def _processed_chunk_dir(ticker: str, form: str, accession_number: str) -> Path:

@@ -5,18 +5,26 @@ from pathlib import Path
 
 import typer
 
-from src.finance_report_assistant.ingestion.edgar_ingest import ingest_filings_for_ticker
-from src.finance_report_assistant.processing.pipeline import build_chunks_for_ticker_form
-from src.finance_report_assistant.processing.tokenizer_eval import (
+from finance_report_assistant.classification.themes import classify_themes
+from finance_report_assistant.evaluation.retrieval_eval import (
+    evaluate_retrieval,
+    render_error_analysis_markdown,
+    render_summary_markdown,
+)
+from finance_report_assistant.ingestion.edgar_ingest import ingest_filings_for_ticker
+from finance_report_assistant.processing.pipeline import build_chunks_for_ticker_form
+from finance_report_assistant.processing.tokenizer_eval import (
     append_markdown_report,
     evaluate_tokenizer_metrics,
     load_chunk_texts,
 )
-from src.finance_report_assistant.retrieval.index import (
+from finance_report_assistant.qa.grounded_qa import compose_grounded_answer
+from finance_report_assistant.retrieval.index import (
     build_retrieval_index,
     default_index_dir,
     load_retrieval_index,
 )
+from finance_report_assistant.summarization.extractive import summarize_chunks
 
 app = typer.Typer(help="Finance Report Assistant CLI")
 
@@ -146,6 +154,127 @@ def search(
             "text": hit.record.get("text"),
         }
         typer.echo(json.dumps(row, ensure_ascii=False))
+
+
+@app.command("ask")
+def ask(
+    question: str = typer.Option(..., help="Grounded question to answer from filings"),
+    ticker: str = typer.Option(..., help="Ticker symbol, e.g., AAPL"),
+    form: str = typer.Option("10-K", help="SEC form type"),
+    top_k: int = typer.Option(5, min=1, max=20),
+) -> None:
+    """Answer a question using retrieved filing chunks and return citations/themes/summary."""
+    index_dir = default_index_dir(ticker=ticker, form=form)
+    if not index_dir.exists():
+        typer.echo(f"Index does not exist at {index_dir}. Run build-retrieval-index first.")
+        raise typer.Exit(code=1)
+
+    index = load_retrieval_index(index_dir)
+    hits = index.search(question, top_k=top_k)
+    if not hits:
+        typer.echo("No retrieval hits found.")
+        raise typer.Exit(code=1)
+
+    qa = compose_grounded_answer(question, hits)
+    top_text = "\n".join(h.record.get("text", "") for h in hits)
+    themes = classify_themes(top_text)
+    summary = summarize_chunks([h.record for h in hits], max_sentences=4)
+
+    payload = {
+        "question": question,
+        "answer": qa.answer,
+        "summary": summary,
+        "themes": [
+            {"theme": t.theme, "score": round(t.score, 6), "hits": t.hits}
+            for t in themes
+            if t.hits > 0
+        ],
+        "citations": [
+            {
+                "chunk_id": c.chunk_id,
+                "citation_url": c.citation_url,
+                "section_title": c.section_title,
+                "accession_number": c.accession_number,
+            }
+            for c in qa.citations
+        ],
+    }
+    typer.echo(json.dumps(payload, indent=2, ensure_ascii=False))
+
+
+@app.command("demo")
+def demo(
+    ticker: str = typer.Option("AAPL", help="Ticker symbol"),
+    question: str = typer.Option(..., help="Question to ask after ingest/index"),
+    limit: int = typer.Option(1, min=1, max=3),
+) -> None:
+    """Unified MVP flow: ingest -> chunks -> index -> ask."""
+    ingest_filings_for_ticker(ticker=ticker, form="10-K", limit=limit)
+    build_chunks_for_ticker_form(ticker=ticker, form="10-K", limit=limit)
+    build_retrieval_index(ticker=ticker, form="10-K", limit=limit)
+
+    index = load_retrieval_index(default_index_dir(ticker=ticker, form="10-K"))
+    hits = index.search(question, top_k=5)
+    qa = compose_grounded_answer(question, hits)
+    summary = summarize_chunks([h.record for h in hits], max_sentences=4)
+
+    payload = {
+        "ticker": ticker.upper(),
+        "question": question,
+        "answer": qa.answer,
+        "summary": summary,
+        "citations": [
+            {
+                "chunk_id": c.chunk_id,
+                "citation_url": c.citation_url,
+                "section_title": c.section_title,
+            }
+            for c in qa.citations
+        ],
+    }
+    typer.echo(json.dumps(payload, indent=2, ensure_ascii=False))
+
+
+@app.command("eval-retrieval")
+def eval_retrieval(
+    ticker: str = typer.Option(..., help="Ticker symbol, e.g., AAPL"),
+    form: str = typer.Option("10-K", help="SEC form type"),
+    top_k: int = typer.Option(5, min=1, max=20),
+    max_queries: int = typer.Option(30, min=5, max=500),
+    error_limit: int = typer.Option(20, min=1, max=200),
+    bm25_weight: float = typer.Option(0.55, min=0.0, max=1.0),
+    summary_md: Path = typer.Option(Path("docs/evaluation.md")),
+    error_md: Path = typer.Option(Path("docs/retrieval_error_analysis.md")),
+) -> None:
+    """Evaluate retrievers and write summary + error analysis markdown."""
+    index_dir = default_index_dir(ticker=ticker, form=form)
+    if not index_dir.exists():
+        typer.echo(f"Index does not exist at {index_dir}. Run build-retrieval-index first.")
+        raise typer.Exit(code=1)
+
+    index = load_retrieval_index(index_dir)
+    payload = evaluate_retrieval(
+        index=index,
+        top_k=top_k,
+        max_queries=max_queries,
+        error_limit=error_limit,
+        bm25_weight=bm25_weight,
+    )
+
+    summary_text = render_summary_markdown(payload, ticker=ticker, form=form)
+    error_text = render_error_analysis_markdown(payload, ticker=ticker, form=form)
+
+    summary_md.parent.mkdir(parents=True, exist_ok=True)
+    with summary_md.open("a", encoding="utf-8") as f:
+        f.write(summary_text)
+
+    error_md.parent.mkdir(parents=True, exist_ok=True)
+    error_md.write_text(error_text, encoding="utf-8")
+
+    typer.echo(json.dumps(payload["results"], indent=2))
+    typer.echo(
+        f"Wrote summary to {summary_md} and error analysis to {error_md}"
+    )
 
 
 if __name__ == "__main__":
