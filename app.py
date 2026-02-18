@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import streamlit as st
@@ -33,6 +34,16 @@ EXAMPLE_QUESTIONS = [
     "What does the filing say about debt and financing capacity?",
     "What cybersecurity or operational risks are highlighted?",
 ]
+
+
+def _is_hf_space() -> bool:
+    return bool(os.getenv("SPACE_ID"))
+
+
+def _hf_mode_enabled() -> bool:
+    if _is_hf_space():
+        return os.getenv("HF_PREBUILT_ONLY", "1") != "0"
+    return os.getenv("HF_PREBUILT_ONLY", "0") == "1"
 
 
 def _inject_styles() -> None:
@@ -290,7 +301,12 @@ def main() -> None:
         )
         form = st.selectbox("Form", FORMS, index=0)
         top_k = st.slider("Top-K", min_value=1, max_value=10, value=5)
-        auto_build = st.checkbox("Auto-build if missing", value=True)
+        hf_mode = _hf_mode_enabled()
+        if hf_mode:
+            st.caption("HF mode: prebuilt indexes only (no live SEC fetch).")
+            auto_build = False
+        else:
+            auto_build = st.checkbox("Auto-build if missing", value=True)
 
         st.markdown("---")
         st.subheader("Prompt")
@@ -300,7 +316,8 @@ def main() -> None:
 
     left, right = st.columns([1, 1])
     with left:
-        if st.button("Build / Refresh", use_container_width=True):
+        build_clicked = st.button("Build / Refresh", use_container_width=True, disabled=hf_mode)
+        if build_clicked:
             with st.spinner(f"Building pipeline for {ticker} {form}..."):
                 _build_pipeline(ticker=ticker, form=form, limit=1)
             st.success("Pipeline ready.")
@@ -315,6 +332,13 @@ def main() -> None:
 
         index_dir = default_index_dir(ticker=ticker, form=form)
         if not _index_ready(index_dir):
+            if hf_mode:
+                st.error(
+                    "No prebuilt index found for this company/form in HF mode. "
+                    "Choose a company with preloaded data, or deploy with prebuilt "
+                    "`data/index/retrieval/...` artifacts."
+                )
+                st.stop()
             if not auto_build:
                 st.error(f"Index missing at {index_dir}. Enable auto-build or run Build / Refresh.")
                 st.stop()

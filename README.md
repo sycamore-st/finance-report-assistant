@@ -46,6 +46,8 @@ fra eval-retrieval --ticker AAPL --form 10-K --top-k 5 --max-queries 30
 
 ## Streamlit UI
 
+Live demo: [Hugging Face Space](https://huggingface.co/spaces/wu-yanjing/finance-report-assistant)
+
 Run local UI:
 
 ```bash

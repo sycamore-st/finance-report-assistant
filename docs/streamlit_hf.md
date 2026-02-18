@@ -17,9 +17,11 @@ streamlit run app.py
    - `requirements.txt`
 4. Set Space secrets/environment variables:
    - `SEC_USER_AGENT=FinanceReportAssistant/0.1 (your-email@example.com)`
+   - `HF_PREBUILT_ONLY=1` (recommended for stability/fast startup)
 5. Launch/restart the Space.
 
 ## Notes
 - The app can auto-build ingestion/chunks/index per company on first question.
 - Initial run may take time due to SEC fetch and index build.
 - For faster demo UX, pre-build and commit index artifacts for selected companies.
+- In HF mode (`HF_PREBUILT_ONLY=1`), live build buttons and SEC fetch are disabled.
