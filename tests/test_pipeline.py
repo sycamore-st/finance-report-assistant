@@ -37,3 +37,5 @@ def test_build_chunks_for_filing_dir_writes_jsonl(tmp_path: Path, monkeypatch) -
     assert first["form"] == "10-K"
     assert first["citation_url"].startswith("https://www.sec.gov/Archives/edgar/data")
     assert first["chunk_id"]
+    assert isinstance(first.get("sentences"), list)
+    assert isinstance(first.get("sentence_spans"), list)

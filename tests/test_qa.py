@@ -15,6 +15,7 @@ def test_compose_grounded_answer_returns_answer_and_citations() -> None:
                 "section_title": "Risk Factors",
                 "accession_number": "0001",
                 "text": "Supply chain disruptions could impact margins. Demand remains strong.",
+                "sentences": ["Supply chain disruptions could impact margins.", "Demand remains strong."],
             },
         )
     ]
@@ -25,3 +26,5 @@ def test_compose_grounded_answer_returns_answer_and_citations() -> None:
     assert "Supply chain" in result.answer
     assert len(result.citations) == 1
     assert result.citations[0].chunk_id == "c1"
+    assert result.citations[0].evidence_sentences
+    assert "Supply chain" in result.citations[0].evidence_sentences[0]

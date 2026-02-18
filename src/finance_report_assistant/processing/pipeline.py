@@ -7,6 +7,7 @@ from finance_report_assistant.core.config import settings
 from finance_report_assistant.core.models import FilingChunk
 from finance_report_assistant.processing.chunker import build_chunk_candidates, deterministic_chunk_id
 from finance_report_assistant.processing.html_cleaner import extract_sections_from_html
+from finance_report_assistant.processing.sentences import split_sentences_with_spans
 
 
 def _processed_chunk_dir(ticker: str, form: str, accession_number: str) -> Path:
@@ -63,6 +64,9 @@ def build_chunks_for_filing_dir(
         char_start = char_cursor
         char_end = char_start + len(candidate.text)
 
+        sentence_spans = split_sentences_with_spans(candidate.text)
+        sentences = [s["text"] for s in sentence_spans if s.get("text")]
+
         row = FilingChunk(
             chunk_id=chunk_id,
             ticker=metadata["ticker"],
@@ -79,6 +83,8 @@ def build_chunks_for_filing_dir(
             text=candidate.text,
             source_file=str(html_path),
             citation_url=metadata["sec_archive_url"],
+            sentences=sentences,
+            sentence_spans=sentence_spans,
         )
         char_cursor = char_end + 1
 

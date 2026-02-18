@@ -193,8 +193,14 @@ def ask(
             {
                 "chunk_id": c.chunk_id,
                 "citation_url": c.citation_url,
+                "citation_highlight_url": c.citation_highlight_url,
+                "sec_text_url": c.sec_text_url,
+                "filing_index_url": c.filing_index_url,
                 "section_title": c.section_title,
                 "accession_number": c.accession_number,
+                "search_hint": c.search_hint,
+                "evidence_snippet": c.evidence_snippet,
+                "evidence_sentences": c.evidence_sentences,
             }
             for c in qa.citations
         ],
@@ -227,7 +233,13 @@ def demo(
             {
                 "chunk_id": c.chunk_id,
                 "citation_url": c.citation_url,
+                "citation_highlight_url": c.citation_highlight_url,
+                "sec_text_url": c.sec_text_url,
+                "filing_index_url": c.filing_index_url,
                 "section_title": c.section_title,
+                "search_hint": c.search_hint,
+                "evidence_snippet": c.evidence_snippet,
+                "evidence_sentences": c.evidence_sentences,
             }
             for c in qa.citations
         ],

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl
 
 
 class FilingMetadata(BaseModel):
@@ -31,3 +31,5 @@ class FilingChunk(BaseModel):
     text: str
     source_file: str
     citation_url: HttpUrl
+    sentences: list[str] = Field(default_factory=list)
+    sentence_spans: list[dict[str, int | str]] = Field(default_factory=list)

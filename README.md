@@ -44,6 +44,24 @@ Evaluate retrieval quality and write summary + error analysis docs:
 fra eval-retrieval --ticker AAPL --form 10-K --top-k 5 --max-queries 30
 ```
 
+## Streamlit UI
+
+Run local UI:
+
+```bash
+source .venv/bin/activate
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+UI features:
+- company selection with full names (`AAPL/MSFT/GOOGL/AMZN/META/NVDA/TSLA/JPM/JNJ/XOM`)
+- example question presets + custom input
+- grounded answer with citations + summary + theme scores
+- in-app quick manual: what the tool does and how to use it
+
+For Hugging Face deployment details, see `docs/streamlit_hf.md`.
+
 ## Unified MVP demo flow
 
 Single command to ingest filings, build chunks/index, and return answer + citations:

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from urllib.parse import quote
 
 from finance_report_assistant.retrieval.hybrid import RetrievalHit
 
@@ -15,6 +16,12 @@ class Citation:
     citation_url: str
     section_title: str | None
     accession_number: str | None
+    citation_highlight_url: str | None = None
+    sec_text_url: str | None = None
+    filing_index_url: str | None = None
+    search_hint: str | None = None
+    evidence_snippet: str | None = None
+    evidence_sentences: list[str] | None = None
 
 
 @dataclass
@@ -34,6 +41,26 @@ def _score_sentence(sentence: str, question_terms: set[str]) -> float:
     overlap = len(question_terms & sent_terms)
     density = overlap / max(1, len(sent_terms))
     return overlap + density
+
+
+def _evidence_sentences_from_record(record: dict, question_terms: set[str], top_n: int = 2) -> list[str]:
+    candidates = record.get("sentences") or []
+    if not candidates:
+        candidates = _split_sentences(record.get("text", ""))
+
+    scored: list[tuple[float, str]] = []
+    for sent in candidates:
+        if not sent:
+            continue
+        score = _score_sentence(sent, question_terms)
+        if score > 0:
+            scored.append((score, sent.strip()))
+
+    if scored:
+        top = sorted(scored, key=lambda x: x[0], reverse=True)[:top_n]
+        return [s for _, s in top]
+
+    return [candidates[0].strip()] if candidates else []
 
 
 def compose_grounded_answer(
@@ -62,12 +89,45 @@ def compose_grounded_answer(
 
     citations: list[Citation] = []
     for hit in hits[:max_sentences]:
+        record = hit.record
+        accession_number = record.get("accession_number")
+        cik = record.get("cik")
+        sec_text_url: str | None = None
+        if accession_number and cik:
+            accession_no_dashes = str(accession_number).replace("-", "")
+            filing_base = (
+                f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/"
+                f"{accession_no_dashes}"
+            )
+            sec_text_url = (
+                f"{filing_base}/{accession_no_dashes}.txt"
+            )
+            filing_index_url = f"{filing_base}/{accession_number}-index.html"
+        else:
+            filing_index_url = None
+
+        evidence_sentences = _evidence_sentences_from_record(record, q_terms, top_n=2)
+        evidence_text = " ".join(evidence_sentences).strip() if evidence_sentences else str(record.get("text", "")).strip()
+        search_hint = " ".join(evidence_text.split()[:10]) if evidence_text else None
+        evidence_snippet = evidence_text[:260] if evidence_text else None
+        highlight_url: str | None = None
+        if record.get("citation_url") and evidence_sentences:
+            highlight_text = evidence_sentences[0][:180].strip()
+            if highlight_text:
+                highlight_url = f"{record['citation_url']}#:~:text={quote(highlight_text, safe='')}"
+
         citations.append(
             Citation(
-                chunk_id=str(hit.record.get("chunk_id", "")),
-                citation_url=str(hit.record.get("citation_url", "")),
-                section_title=hit.record.get("section_title"),
-                accession_number=hit.record.get("accession_number"),
+                chunk_id=str(record.get("chunk_id", "")),
+                citation_url=str(record.get("citation_url", "")),
+                citation_highlight_url=highlight_url,
+                section_title=record.get("section_title"),
+                accession_number=accession_number,
+                sec_text_url=sec_text_url,
+                filing_index_url=filing_index_url,
+                search_hint=search_hint,
+                evidence_snippet=evidence_snippet,
+                evidence_sentences=evidence_sentences,
             )
         )
 

@@ -52,6 +52,8 @@ Files:
 - `char_end` (int)
 - `word_count` (int)
 - `text` (str)
+- `sentences` (list[str], sentence-level units derived from chunk text)
+- `sentence_spans` (list[{text, char_start, char_end}], offsets relative to chunk text)
 - `source_file` (str)
 - `citation_url` (str)
 
