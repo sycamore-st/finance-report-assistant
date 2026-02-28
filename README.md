@@ -64,6 +64,22 @@ UI features:
 
 For Hugging Face deployment details, see `docs/streamlit_hf.md`.
 
+## NLP practice notebooks
+
+Practice notebooks for spaCy, NLTK, TextBlob, Gensim, and Transformers using a Hugging Face dataset:
+
+- `notebooks/nlp_libraries_practice.ipynb`
+- `notebooks/huggingface_dataset_basics.ipynb`
+- `notebooks/seq2seq_nlp_tasks_practice.ipynb` (Seq2Seq: translation, summarization, QA)
+
+Run:
+
+```bash
+source .venv/bin/activate
+pip install jupyter
+jupyter notebook
+```
+
 ## Unified MVP demo flow
 
 Single command to ingest filings, build chunks/index, and return answer + citations:

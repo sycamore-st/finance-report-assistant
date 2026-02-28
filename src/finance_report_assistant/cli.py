@@ -210,7 +210,7 @@ def ask(
 
 @app.command("demo")
 def demo(
-    ticker: str = typer.Option("AAPL", help="Ticker symbol"),
+    ticker: str = typer.Option("MSFT", help="Ticker symbol"),
     question: str = typer.Option(..., help="Question to ask after ingest/index"),
     limit: int = typer.Option(1, min=1, max=3),
 ) -> None:

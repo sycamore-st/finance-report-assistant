@@ -78,9 +78,11 @@ def extract_sections_from_html(html: str) -> list[SectionText]:
     """
     soup = BeautifulSoup(html, "html.parser")
 
+    # Removes non-content tags (`script`, `style`, `noscript`, `svg`)
     for tag in soup(["script", "style", "noscript", "svg"]):
         tag.decompose()
 
+    # Removes hidden or non-visible elements
     for tag in soup.find_all(_is_hidden_tag):
         tag.decompose()
 
@@ -100,11 +102,13 @@ def extract_sections_from_html(html: str) -> list[SectionText]:
         sections.append(SectionText(title=current_title, path=path, text=text))
         buffer = []
 
+    # Walks heading/content tags (`h1`-`h4`, `p`, `div`, `li`, `td`, `th`)
     for node in soup.find_all(["h1", "h2", "h3", "h4", "p", "div", "li", "td", "th"]):
         node_text = _normalize_whitespace(node.get_text(" ", strip=True))
         if not node_text:
             continue
 
+        # Tracks heading hierarchy
         if node.name in {"h1", "h2", "h3", "h4"}:
             flush()
             level = int(node.name[1])
@@ -113,6 +117,7 @@ def extract_sections_from_html(html: str) -> list[SectionText]:
             current_title = node_text
             continue
 
+        # Detects `Item` headings such as `Item 1A. Risk Factors`
         if _is_item_heading(node_text):
             flush()
             heading_stack = [node_text]
@@ -123,6 +128,7 @@ def extract_sections_from_html(html: str) -> list[SectionText]:
 
     flush()
 
+    # Splits the “Document” fallback section into section-aware blocks when item headings are found
     if not sections:
         fallback = _normalize_whitespace(soup.get_text(" ", strip=True))
         if fallback:
