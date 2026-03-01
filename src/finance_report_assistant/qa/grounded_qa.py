@@ -37,6 +37,7 @@ def _split_sentences(text: str) -> list[str]:
 
 
 def _score_sentence(sentence: str, question_terms: set[str]) -> float:
+    """Scores candidate sentences by term overlap and overlap density"""
     sent_terms = set(TOKEN_RE.findall(sentence.lower()))
     overlap = len(question_terms & sent_terms)
     density = overlap / max(1, len(sent_terms))
@@ -70,6 +71,7 @@ def compose_grounded_answer(
 ) -> QAResult:
     if not hits:
         return QAResult(question=question, answer="No relevant evidence was retrieved.", citations=[])
+
 
     q_terms = set(TOKEN_RE.findall(question.lower()))
     candidate_sentences: list[tuple[float, str]] = []

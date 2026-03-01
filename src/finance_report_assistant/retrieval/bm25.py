@@ -7,7 +7,7 @@ from typing import Iterable
 
 TOKEN_RE = re.compile(r"[a-z0-9]+")
 
-
+# Regex tokenization
 def tokenize(text: str) -> list[str]:
     return TOKEN_RE.findall(text.lower())
 
