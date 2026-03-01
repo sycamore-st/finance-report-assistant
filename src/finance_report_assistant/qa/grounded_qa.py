@@ -83,6 +83,7 @@ def compose_grounded_answer(
             if score > 0:
                 candidate_sentences.append((score, sentence))
 
+    # Selects top evidence sentences from retrieved chunks
     if candidate_sentences:
         top = sorted(candidate_sentences, key=lambda x: x[0], reverse=True)[:max_sentences]
         answer = " ".join(sentence for _, sentence in top)
